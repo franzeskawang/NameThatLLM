@@ -1,0 +1,22 @@
+# Python 快取與環境
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+
+# Jupyter / IDE
+.ipynb_checkpoints/
+.vscode/
+.idea/
+
+# Kaggle 比賽資料、模型權重與提交輸出檔
+kaggle/
+saved_*/
+*.pt
+*.pth
+*.bin
+*.safetensors
+submission.parquet
+submission.csv

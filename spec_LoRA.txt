@@ -1,0 +1,46 @@
+目標: 產生一個NameThatLLM_LoRA.py，以根據輸入的測試句子猜測來自哪一個LLM(共18個類別，每一類別代表一個LLM)。
+發想: text_embedding代表美個測試句子的語意，每一個token_embedding減掉text_embedding後會產生每個句子的韻律，可以依據這個韻律推論測試句子來自哪個LLM。
+輸入格式:
+import pathlib
+import pandas as pd
+
+
+CANDIDATES = [
+    pathlib.Path('/kaggle/input/competitions/name-that-llm'),
+    pathlib.Path('/kaggle/input/name-that-llm'),
+]
+DATA_DIR = next(p for p in CANDIDATES if (p / 'train.csv').exists())
+
+train_df = pd.read_csv(DATA_DIR / 'train.csv')
+test_df = pd.read_csv(DATA_DIR / 'test.csv')
+
+基礎模型:
+from sentence_transformers import SentenceTransformer
+import numpy as np 
+
+model_path = "/kaggle/input/models/levantaokkz/bge-large-en-v1.5/transformers/default/1/bge-large-en-v1.5"
+model = SentenceTransformer(model_path)
+
+訓練過程:
+-以LoRA的方式訓練bge-large-en-v1.5。
+-從model_encode中抽取出每個測試句子中每個token的token_embedding；並利用model產生每個測試句子的text_embedding。
+-對於一個測試句子，將每一個token_embedding N2-Normalization後，將每一個token_embedding減掉text_embedding後拼接，以產生rhythm_embedding。
+-將rhythm_embedding輸入一層transformer，輸出18個類別中的其中一者。
+-text data中分出validation data，並計算出balanced_accuracy。
+-訓練1個epoch，使用Adam Optimizer。並選取合適的Loss Function。
+
+推論過程:
+-依據訓練過程設計推論過程。
+
+輸出格式:
+test_preds = model_pipeline.predict(test_df['text'].fillna(''))
+
+submission = pd.DataFrame(
+    {
+        'id': test_df['id'],
+        'model': test_preds,
+    }
+)
+
+submission.to_parquet('submission.parquet', index=False)
+print(f'Saved submission.parquet with {len(submission)} rows.')
